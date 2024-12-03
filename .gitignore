@@ -1,7 +1,9 @@
 .project
 *.rdb
 junit*xml
-
+snappass-helm
+snappass_yamls
+yamls
 env/
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -20,3 +20,4 @@ Thanks a lot for the contributions of:
 * James Barclay
 * Thomas Decaux
 * Lauri Lubi
+* Anshul Thakkar
