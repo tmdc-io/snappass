@@ -1,6 +1,79 @@
+/* ============================================
+   SNAPPASS 2.0 - UNIFIED DESIGN SYSTEM
+   ============================================ */
+
+/* CSS Variables - Muted Blue Palette */
+:root {
+    /* Primary Blue - Muted and Eye-Soothing */
+    --primary-blue: #4A90E2;
+    --primary-blue-hover: #357ABD;
+    --primary-blue-light: #E8F2FC;
+    --primary-blue-focus: rgba(74, 144, 226, 0.15);
+    
+    /* Secondary Colors */
+    --success-green: #28a745;
+    --success-green-hover: #218838;
+    --error-red: #dc3545;
+    --error-red-hover: #c82333;
+    
+    /* Neutral Colors */
+    --text-primary: #1a1a1a;
+    --text-secondary: #6c757d;
+    --text-muted: #9ca3af;
+    --border-color: #e8ecef;
+    --bg-light: #f5f7fa;
+    --bg-white: #ffffff;
+    --bg-hover: #f8f9fa;
+    
+    /* Spacing System */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 40px;
+    
+    /* Typography */
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-base: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 24px;
+    
+    /* Component Heights - Consistent sizing */
+    --input-height: 42px;
+    --button-height: 42px;
+    --textarea-min-height: 180px;
+    --card-min-height: 500px; /* Prevents layout shifts */
+    --card-fixed-height: 560px; /* Same fixed height for both share cards */
+    --form-main-height: 200px; /* Same fixed height for textarea area and file-upload area */
+    
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+    
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
 html {
     position: relative;
     min-height: 100%;
+}
+
+body {
+    background-color: var(--bg-light);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text-primary);
+    line-height: 1.6;
 }
 
 .break-word {
@@ -12,6 +85,683 @@ html {
 }
 
 input[readonly].readonly-text {
-    background-color: #fff;
+    background-color: var(--bg-white);
     cursor: text;
+}
+
+/* ============================================
+   UNIFIED CONTAINER SYSTEM
+   ============================================ */
+
+/* Main container for all pages */
+.snappass-container,
+.container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 var(--spacing-lg);
+}
+
+/* Unified card styling - same internal structure for alignment */
+.share-card,
+.unified-card {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-xl);
+    transition: box-shadow 0.3s ease;
+    min-height: var(--card-min-height);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Both cards: min-height for symmetry; height auto so file card can expand with content */
+.cards-wrapper .share-card {
+    height: auto;
+    min-height: var(--card-fixed-height);
+    max-height: none;
+}
+
+.share-card:hover,
+.unified-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+/* Card content - flex so form sections and button align across cards */
+.card-content {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.3s ease;
+    overflow: hidden;
+}
+
+/* Form container - same structure in both cards for alignment */
+#secretFormContainer,
+#fileFormContainer {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#fileFormContainer {
+    overflow: visible;
+}
+
+/* Form: flex column, content grows, controls + button at bottom */
+.card-content form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    justify-content: space-between;
+}
+
+/* Push button to bottom so both cards' buttons align on same row */
+.share-card .card-content form .btn-generate {
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
+/* Form section above controls: same fixed height in both cards (textarea area = file-upload area) */
+.share-card .card-content form .form-group {
+    flex: 0 0 auto;
+    margin-bottom: var(--spacing-lg);
+}
+
+.share-card .card-content form .form-group:first-of-type {
+    height: var(--form-main-height);
+    min-height: var(--form-main-height);
+    max-height: var(--form-main-height);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* Success state - same fixed card height, content fits inside */
+.success-state {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    overflow-y: auto;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   CARDS WRAPPER - Grid layout (side-by-side desktop, stacked mobile)
+   ============================================ */
+
+.cards-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xl);
+    align-items: stretch;
+}
+
+/* ============================================
+   CARD HEADER - Consistent across all pages
+   ============================================ */
+
+.card-header,
+.page-header {
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: var(--spacing-lg);
+}
+
+.card-header h2,
+.page-header h1 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-description,
+.lead {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+.lead {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-md);
+}
+
+/* ============================================
+   FORM ELEMENTS - Unified styling
+   ============================================ */
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+/* All inputs, selects, textareas - consistent height */
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px var(--primary-blue-focus);
+}
+
+/* Textarea - consistent sizing */
+.secret-textarea,
+textarea.form-control {
+    min-height: var(--textarea-min-height);
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Secret textarea: fixed height so card layout stays consistent */
+#secretFormContainer .secret-textarea {
+    height: var(--textarea-min-height);
+    min-height: var(--textarea-min-height);
+    max-height: var(--textarea-min-height);
+    resize: none;
+}
+
+#secretFormContainer .form-group:first-of-type {
+    flex-shrink: 0;
+}
+
+.secret-textarea:focus,
+textarea.form-control:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px var(--primary-blue-focus);
+}
+
+/* Select elements - prevent clipping */
+select.form-control {
+    height: var(--input-height);
+    min-height: var(--input-height);
+    padding: 10px 32px 10px 12px; /* Extra right padding for dropdown arrow */
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234A90E2' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    cursor: pointer;
+}
+
+select.form-control:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234A90E2' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+}
+
+/* Select options */
+select.form-control option {
+    padding: 8px 12px;
+    line-height: 1.5;
+    min-height: 24px;
+}
+
+/* Input elements */
+input.form-control {
+    height: var(--input-height);
+}
+
+/* ============================================
+   CONTROLS ROW - Same two-column grid in both cards (Expiry aligns)
+   ============================================ */
+
+.controls-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    flex-shrink: 0;
+    align-items: start;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.control-group label {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+}
+
+/* Placeholder column in file card so Expiry sits in first column (aligns with secret card) */
+.control-group-placeholder {
+    visibility: hidden;
+    pointer-events: none;
+    min-height: calc(var(--input-height) + var(--spacing-sm) + 1.2em);
+}
+
+/* ============================================
+   BUTTONS - Unified styling system
+   ============================================ */
+
+/* Base button styles */
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-generate,
+.btn-copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 12px 24px;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    height: var(--button-height);
+    min-height: var(--button-height);
+    font-family: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* Primary button - Muted blue */
+.btn-primary,
+.btn-generate {
+    background: var(--primary-blue);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-generate:hover:not(:disabled) {
+    background: var(--primary-blue-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:disabled,
+.btn-generate:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Generate button - full width */
+.btn-generate {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: var(--font-size-base);
+}
+
+/* Copy button - same blue style as Generate Secure Link */
+.btn-copy {
+    background: var(--primary-blue);
+    color: white;
+    box-shadow: var(--shadow-sm);
+    padding: 12px 24px;
+}
+
+.btn-copy:hover:not(:disabled) {
+    background: var(--primary-blue-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-copy.copied {
+    background: var(--primary-blue-light);
+    color: var(--primary-blue);
+}
+
+/* Secondary button */
+.btn-secondary {
+    width: 100%;
+    border: 2px solid var(--border-color);
+    background: var(--bg-white);
+    color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+    background: var(--bg-hover);
+}
+
+/* Error state */
+.btn-generate.error-state {
+    background: var(--error-red);
+}
+
+.btn-generate.error-state:hover {
+    background: var(--error-red-hover);
+}
+
+/* Button text and spinner */
+.btn-text {
+    flex: 1;
+}
+
+.btn-spinner {
+    font-size: var(--font-size-sm);
+    animation: spin 1s linear infinite;
+    display: none;
+}
+
+.btn-spinner[style*="inline"] {
+    display: inline-block;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Large button (for reveal page) */
+.btn-lg {
+    padding: 14px 32px;
+    font-size: var(--font-size-base);
+    height: auto;
+    min-height: 48px;
+}
+
+/* ============================================
+   FILE UPLOAD ZONE
+   ============================================ */
+
+/* File form: first form-group expands naturally (no fixed height, no scrollbar) */
+#fileFormContainer .form-group:first-of-type {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    overflow: visible;
+}
+
+.file-upload-zone {
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 80px;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-align: center;
+    background: var(--bg-hover);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-upload-zone:hover {
+    border-color: var(--primary-blue);
+    background: var(--primary-blue-light);
+}
+
+.file-upload-zone.dragover {
+    border-color: var(--primary-blue);
+    background: var(--primary-blue-light);
+    transform: scale(1.02);
+}
+
+.file-upload-zone.has-files {
+    border-color: var(--success-green);
+    background: #f0fff4;
+}
+
+.file-input-hidden {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.upload-zone-content {
+    pointer-events: none;
+}
+
+.upload-icon {
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+}
+
+.upload-text {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.upload-link {
+    color: var(--primary-blue);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* Helper text: below drop zone, above file list; spacing from gap on parent */
+.upload-hint {
+    display: block;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+/* File List - expands naturally with files; no scrollbar, no fixed height */
+.file-list {
+    flex: 0 0 auto;
+    min-height: 0;
+    margin: 0;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px var(--spacing-md);
+    background: var(--bg-hover);
+    border-radius: var(--radius-sm);
+    margin: 0;
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.file-name {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-size {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin-left: var(--spacing-md);
+}
+
+/* ============================================
+   SUCCESS STATE - Stable sizing
+   ============================================ */
+
+.success-header {
+    margin-bottom: var(--spacing-lg);
+}
+
+.success-icon {
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+}
+
+.success-header h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.success-description {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Link Container - Consistent across pages */
+.link-container {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.link-input {
+    flex: 1;
+    padding: 12px var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    height: var(--input-height);
+}
+
+.link-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px var(--primary-blue-focus);
+}
+
+/* ============================================
+   UNIFIED PAGE STYLES
+   ============================================ */
+
+/* Section styling for all pages */
+section {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-xl);
+    min-height: var(--card-min-height); /* Prevents layout shifts */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Row layout for reveal/confirm pages */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -var(--spacing-sm);
+    gap: var(--spacing-md);
+}
+
+.row > [class*="col-"] {
+    padding: 0 var(--spacing-sm);
+}
+
+.col-sm-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 968px) {
+    .cards-wrapper {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+    
+    .snappass-container,
+    .container {
+        margin: var(--spacing-lg) auto;
+        padding: 0 var(--spacing-md);
+    }
+    
+    .share-card,
+    .unified-card,
+    section {
+        padding: var(--spacing-lg);
+        min-height: auto;
+    }
+
+    /* On mobile, allow cards to grow so content isn't cut off */
+    .cards-wrapper .share-card {
+        height: auto;
+        min-height: auto;
+        max-height: none;
+    }
+    
+    .col-sm-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .controls-row {
+        grid-template-columns: 1fr;
+    }
+
+    .control-group-placeholder {
+        display: none;
+    }
+    
+    .link-container {
+        flex-direction: column;
+    }
+    
+    .btn-copy {
+        width: 100%;
+    }
+    
+    :root {
+        --card-min-height: 400px; /* Smaller min-height on mobile */
+    }
 }

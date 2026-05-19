@@ -5,24 +5,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="{{ config.STATIC_URL }}/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{{ config.STATIC_URL }}/fontawesome/css/font-awesome.min.css?v=4.7.0" rel="stylesheet">
-    <link href="{{ config.STATIC_URL }}/snappass/css/custom.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='fontawesome/css/font-awesome.min.css') }}?v=4.7.0" rel="stylesheet">
+    <link href="{{ url_for('static', filename='snappass/css/custom.css') }}" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='snappass/images/favicon.svg') }}">
   </head>
   <body>
     <nav class="navbar navbar-default navbar-static-top">
       <div class="container">
         <div class="navbar-header">
           <a class="navbar-brand" style="display:flex; padding: 10px 15px; align-items: center; white-space: nowrap;" href="/">
-            <img style="margin-right:20px; margin-bottom:4px;" src="{{ config.STATIC_URL }}/snappass/images/modern.png" height="25">
+            <img style="margin-right:20px; margin-bottom:4px;" src="{{ url_for('static', filename='snappass/images/modern.png') }}" height="25">
             Snappass 2.0 - Secured Secret and File Sharing</a>
         </div>
       </div>
     </nav>
 
     {% block content %}{% endblock %}
-    <script src="{{ config.STATIC_URL }}/jquery/jquery-3.6.0.min.js"></script>
-    <script src="{{ config.STATIC_URL }}/bootstrap/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='jquery/jquery-3.6.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
     {% block js %}{% endblock %}
   </body>
 </html>

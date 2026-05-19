@@ -1,28 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-  <section>
-    <div class="page-header"><h1>{{ _('Share Secret Link') }}</h1></div>
-    <p>{{ _('The secret has been temporarily saved. Send the following URL to your intended recipient.') }}</p>
-    <div class="row">
-      <div class="col-sm-6 margin-bottom-10">
-        <input type="text" class="form-control" id="password-link" value="{{ password_link }}" readonly="readonly">
-      </div>
-
-      <div class="col-sm-6">
-        <button title="{{ _('Copy to clipboard') }}" type="button" class="btn btn-primary copy-clipboard-btn"
-              id="copy-clipboard-btn" data-clipboard-target="#password-link"
-              data-placement='bottom'>
-          <i class="fa fa-clipboard"></i>
+<div class="snappass-container">
+  <div class="unified-card">
+    <div class="card-header">
+      <h1>{{ _('Share Secret Link') }}</h1>
+      <p class="card-description">{{ _('The secret has been temporarily saved. Send the following URL to your intended recipient.') }}</p>
+    </div>
+    
+    <div class="card-content">
+      <div class="link-container">
+        <input 
+          type="text" 
+          class="form-control link-input" 
+          id="password-link" 
+          value="{{ password_link }}" 
+          readonly="readonly">
+        <button 
+          title="{{ _('Copy to clipboard') }}" 
+          type="button" 
+          class="btn btn-primary btn-copy"
+          id="copy-clipboard-btn" 
+          data-clipboard-target="#password-link">
+          <i class="fa fa-clipboard"></i> {{ _('Copy Link') }}
         </button>
       </div>
     </div>
-  </section>
+  </div>
 </div>
 {% endblock %}
 
 {% block js %}
-<script src="{{ config.STATIC_URL }}/clipboardjs/clipboard.min.js"></script>
-<script src="{{ config.STATIC_URL }}/snappass/scripts/clipboard_button.js"></script>
+<script src="{{ url_for('static', filename='clipboardjs/clipboard.min.js') }}"></script>
+<script src="{{ url_for('static', filename='snappass/scripts/clipboard_button.js') }}"></script>
 {% endblock %}

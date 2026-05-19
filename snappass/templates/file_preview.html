@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="snappass-container">
+  <div class="unified-card">
+    <div class="card-header">
+      <h1>{{ _('File ready to download') }}</h1>
+      <p class="card-description">
+        {{ _('Click the button below to download the file. The file will be removed after download.') }}
+      </p>
+    </div>
+
+    <div class="card-content">
+      <div class="form-group" style="text-align: center;">
+        <p class="file-preview-name" style="font-size: var(--font-size-lg); color: var(--text-primary); margin-bottom: var(--spacing-lg); word-break: break-all;">
+          {{ filename }}
+        </p>
+
+        <a href="{{ download_url }}" class="btn btn-primary btn-generate" download style="display: inline-flex;">
+          <i class="fa fa-download"></i> {{ _('Download') }}
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

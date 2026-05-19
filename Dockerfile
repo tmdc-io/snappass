@@ -1,27 +1,41 @@
-FROM python:3.8-slim
+# ---------- Build stage ----------
+FROM dhi.io/python:3-alpine3.23-dev AS build
 
-ENV APP_DIR=/usr/src/snappass
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
 
-RUN groupadd -r snappass && \
-    useradd -r -g snappass snappass && \
-    mkdir -p $APP_DIR
+WORKDIR /build
 
-WORKDIR $APP_DIR
+COPY setup.py requirements.txt MANIFEST.in README.rst AUTHORS.rst ./
+COPY snappass ./snappass
 
-COPY ["setup.py", "requirements.txt", "MANIFEST.in", "README.rst", "AUTHORS.rst", "$APP_DIR/"]
-COPY ["./snappass", "$APP_DIR/snappass"]
+# Install deps into /app
+RUN pip install --no-cache-dir -r requirements.txt --target /app
 
-RUN pip install -r requirements.txt
+# Compile translations
+RUN python -m babel.messages.frontend compile -d snappass/translations
 
-RUN pybabel compile -d snappass/translations
+# Install the application itself
+RUN pip install --no-cache-dir . --target /app
 
-RUN python setup.py install && \
-    chown -R snappass $APP_DIR && \
-    chgrp -R snappass $APP_DIR
 
-USER snappass
+# ---------- Runtime stage ----------
+FROM dhi.io/python:3-alpine3.23
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
+
+WORKDIR /app
+
+# Copy installed app + deps
+COPY --from=build /app /app
+
+# Run as non-root (DHI default UID-safe)
+USER 1000
 
 # Default Flask port
 EXPOSE 5000
 
-CMD ["snappass"]
+CMD ["python", "-m", "snappass.main"]
