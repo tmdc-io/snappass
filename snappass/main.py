@@ -494,6 +494,11 @@ def upload_file():
         if ttl_seconds <= 0 or ttl_seconds > MAX_TTL:
             return jsonify(error=f"Invalid TTL value. Must be between 1 and {MAX_TTL} seconds."), 400
 
+        file_max_access_count_str = request.form.get('file_max_access_count', '').strip()
+        if not file_max_access_count_str or not file_max_access_count_str.isdigit() or int(file_max_access_count_str) < 1:
+            return jsonify(error="Access count must be a positive integer"), 400
+        file_max_access_count = int(file_max_access_count_str)
+
         # Filter out empty files
         valid_files = [f for f in files if f.filename and f.filename.strip()]
         if not valid_files:
@@ -534,7 +539,8 @@ def upload_file():
                 redis_client.hset(file_key, mapping={
                     "path": file_path,
                     "filename": original_filename,
-                    "unique_filename": unique_filename
+                    "unique_filename": unique_filename,
+                    "access_count": file_max_access_count
                 })
                 redis_client.expire(file_key, ttl_seconds)
                 
@@ -543,7 +549,7 @@ def upload_file():
                 
                 # Generate download link
                 download_link = f"{set_base_url(request)}uploads/{quote_plus(file_key)}"
-                return jsonify(download_link=download_link, ttl=ttl_seconds)
+                return jsonify(download_link=download_link, ttl=ttl_seconds, max_access_count=file_max_access_count)
                 
             except OSError as e:
                 # Clean up on error (permission, disk full, etc.)
@@ -599,7 +605,8 @@ def upload_file():
                     "path": zip_path,
                     "filename": "snappass_files.zip",
                     "unique_filename": zip_unique_name,
-                    "is_zip": "true"
+                    "is_zip": "true",
+                    "access_count": file_max_access_count
                 })
                 redis_client.expire(file_key, ttl_seconds)
                 
@@ -616,7 +623,7 @@ def upload_file():
                 
                 # Generate download link
                 download_link = f"{set_base_url(request)}uploads/{quote_plus(file_key)}"
-                return jsonify(download_link=download_link, ttl=ttl_seconds)
+                return jsonify(download_link=download_link, ttl=ttl_seconds, max_access_count=file_max_access_count)
                 
             except Exception as e:
                 # Clean up on error
@@ -640,7 +647,7 @@ def upload_file():
     except BadRequest as e:
         app.logger.error(f"Bad request in upload_file: {e}")
         return jsonify(
-            error="Invalid request. Use multipart/form-data with 'file' and 'file_ttl' fields."
+            error="Invalid request. Use multipart/form-data with 'file', 'file_ttl', and 'file_max_access_count' fields."
         ), 400
     except Exception as e:
         app.logger.error(f"Unexpected error in upload_file: {e}")
@@ -667,13 +674,29 @@ def schedule_file_deletion(file_path, file_key, ttl_seconds):
     timer.daemon = True  # Allow thread to exit when main program exits
     timer.start()
 
+def _parse_file_access_count(file_metadata):
+    """Read remaining access count from Redis hash (default 1 for legacy entries)."""
+    raw = file_metadata.get(b"access_count")
+    if raw is None:
+        return 1
+    if isinstance(raw, bytes):
+        raw = raw.decode('utf-8')
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return 1
+
+
 def _get_file_metadata(file_key):
-    """Fetch and validate file metadata from Redis. Returns (file_path, filename) or (None, error_response)."""
+    """Fetch and validate file metadata from Redis. Returns (file_path, filename, access_count) or (None, error_response)."""
     file_key = unquote_plus(file_key)
     if not file_key.startswith('file:'):
         return None, (jsonify(error="Invalid file key format"), 400)
     file_metadata = redis_client.hgetall(file_key)
     if not file_metadata:
+        return None, (jsonify(error="File not found or has expired"), 404)
+    access_count = _parse_file_access_count(file_metadata)
+    if access_count <= 0:
         return None, (jsonify(error="File not found or has expired"), 404)
     try:
         file_path = file_metadata.get(b"path")
@@ -693,7 +716,7 @@ def _get_file_metadata(file_key):
         return None, (jsonify(error="File not found on disk"), 404)
     if not os.access(file_path, os.R_OK):
         return None, (jsonify(error="File is not accessible"), 403)
-    return (file_path, filename), None
+    return (file_path, filename, access_count), None
 
 
 @app.route('/uploads/<file_key>', methods=['GET'])
@@ -704,10 +727,10 @@ def download_file(file_key):
         result, err = _get_file_metadata(file_key)
         if err is not None:
             return err
-        file_path, filename = result
+        file_path, filename, access_count = result
         file_key_decoded = unquote_plus(file_key)
 
-        # Explicit download trigger: serve file and delete
+        # Explicit download trigger: serve file and consume one access
         if request.args.get('download') == 'true':
             try:
                 response = send_file(
@@ -717,30 +740,44 @@ def download_file(file_key):
                     mimetype="application/octet-stream"
                 )
                 response.direct_passthrough = False
-                try:
-                    redis_client.delete(file_key_decoded)
-                except Exception as e:
-                    app.logger.warning(f"Failed to delete Redis key {file_key_decoded}: {e}")
 
-                def delete_after_download():
+                if access_count > 1:
+                    redis_client.hset(file_key_decoded, "access_count", access_count - 1)
+                else:
                     try:
-                        if os.path.exists(file_path):
-                            os.remove(file_path)
-                            app.logger.info(f"File {file_path} deleted after download.")
+                        redis_client.delete(file_key_decoded)
                     except Exception as e:
-                        app.logger.warning(f"Failed to delete file {file_path} after download: {e}")
+                        app.logger.warning(f"Failed to delete Redis key {file_key_decoded}: {e}")
 
-                timer = threading.Timer(5.0, delete_after_download)
-                timer.daemon = True
-                timer.start()
+                    def delete_after_download():
+                        try:
+                            if os.path.exists(file_path):
+                                os.remove(file_path)
+                                app.logger.info(f"File {file_path} deleted after download.")
+                        except Exception as e:
+                            app.logger.warning(f"Failed to delete file {file_path} after download: {e}")
+
+                    timer = threading.Timer(5.0, delete_after_download)
+                    timer.daemon = True
+                    timer.start()
+
                 return response
             except Exception as e:
                 app.logger.error(f"Error serving file {file_key_decoded}: {e}")
                 return jsonify(error="An error occurred while serving the file"), 500
 
-        # No download param: show preview page (do not delete); use url_for for HTTPS-safe absolute URL
-        download_url = url_for('download_file', file_key=file_key_decoded, download='true', _external=True)
-        return render_template('file_preview.html', filename=filename, download_url=download_url)
+        # No download param: show preview page (do not consume access)
+        _scheme = 'https' if not NO_SSL else 'http'
+        download_url = url_for(
+            'download_file', file_key=file_key_decoded, download='true',
+            _external=True, _scheme=_scheme
+        )
+        return render_template(
+            'file_preview.html',
+            filename=filename,
+            download_url=download_url,
+            access_count=access_count
+        )
 
     except Exception as e:
         app.logger.error(f"Unexpected error in download_file: {e}")

@@ -6,7 +6,11 @@
     <div class="card-header">
       <h1>{{ _('File ready to download') }}</h1>
       <p class="card-description">
-        {{ _('Click the button below to download the file. The file will be removed after download.') }}
+        {% if access_count == 1 %}
+        {{ _('Click the button below to download the file. This is the only download allowed.') }}
+        {% else %}
+        {{ _('This file can be downloaded up to %(count)s times. Each download uses one access.', count=access_count) }}
+        {% endif %}
       </p>
     </div>
 
