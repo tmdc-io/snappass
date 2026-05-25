@@ -2,7 +2,7 @@ services:
 
     snappass:
         build: .
-        image: tmdcio/snappass:2.3.2
+        image: tmdcio/snappass:2.3.3
         ports:
             - "5000:5000"
         stop_signal: SIGINT

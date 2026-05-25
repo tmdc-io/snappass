@@ -767,10 +767,8 @@ def download_file(file_key):
                 return jsonify(error="An error occurred while serving the file"), 500
 
         # No download param: show preview page (do not consume access)
-        _scheme = 'https' if not NO_SSL else 'http'
         download_url = url_for(
-            'download_file', file_key=file_key_decoded, download='true',
-            _external=True, _scheme=_scheme
+            'download_file', file_key=file_key_decoded, download='true', _external=True
         )
         return render_template(
             'file_preview.html',
